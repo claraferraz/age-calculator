@@ -1,4 +1,11 @@
-import { isExists, isAfter } from "date-fns";
+import {
+  isExists,
+  isAfter,
+  format,
+  formatDistance,
+  formatRelative,
+  subDays,
+} from "../../node_modules/date-fns";
 
 const getInputs = () => {
   const dayInput = document.querySelector("#day-input");
@@ -30,6 +37,9 @@ dateForm.addEventListener("submit", (e) => {
 
   validateInputs(data, bday);
 });
+function bDay(year, month, day) {
+  return new Date(`${year}-${month}-${day}`);
+}
 
 const errorMsg = {
   validDate: "Must be a valid date",
@@ -40,82 +50,105 @@ const errorMsg = {
 };
 function getP() {
   return {
-    dayError: document.querySelector(".day-error-txt"),
-    monthError: document.querySelector(".month-error-txt"),
-    yearError: document.querySelector(".year-error-txt"),
+    dayP: document.querySelector(".day-error-txt"),
+    monthP: document.querySelector(".month-error-txt"),
+    yearP: document.querySelector(".year-error-txt"),
   };
 }
 
 function validateInputs(data, bday) {
-  const { dayError, monthError, yearError } = getP();
+  const { dayP, monthP, yearP } = getP();
   const { day, month, year } = data;
   const { dayInput, monthInput, yearInput } = getInputs();
-
+  const check = { day, month, year };
   const today = new Date();
-  const allInputs = getInputs();
 
   //day
   if (day == "") {
-    setError(dayInput, dayError, errorMsg.field);
-    console.log(errorMsg.field);
+    check.day = false;
+    setError(dayInput, dayP, errorMsg.field);
   } else if (day < 1 || day > 31) {
-    setError(dayInput, dayError, errorMsg.validDay);
-  } else setSuccess(dayInput, bday);
+    check.day = false;
+    setError(dayInput, dayP, errorMsg.validDay);
+  } else {
+    check.day = true;
+    setSuccess(dayInput);
+  }
 
   //month
   if (month == "") {
-    setError(monthInput, monthError, errorMsg.field);
-    console.log(errorMsg.field);
+    check.month = false;
+    setError(monthInput, monthP, errorMsg.field);
   } else if (month < 1 || month > 12) {
-    setError(monthInput, monthError, errorMsg.validMonth);
-  } else setSuccess(monthInput, bday);
+    check.month = false;
+    setError(monthInput, monthP, errorMsg.validMonth);
+  } else {
+    check.month = true;
+    setSuccess(monthInput);
+  }
 
   //year
   if (year == "") {
-    setError(yearInput, yearError, errorMsg.field);
-  } else if (year > today.getFullYear) {
-    setError(yearInput, yearError, errorMsg.past);
-  } else setSuccess(yearInput, bday);
+    check.year = false;
+    setError(yearInput, yearP, errorMsg.field);
+  } else if (year > today.getFullYear()) {
+    check.year = false;
+    setError(yearInput, yearP, errorMsg.past);
+  } else {
+    check.year = true;
+    setSuccess(yearInput);
+  }
 
   //date
-  if (isAfter(bday, today)) {
-    setError(allInputs, dayError, errorMsg.past);
-    console.log(errorMsg.past);
-  } else if (!isExists(year, month - 1, day)) {
-    setError(allInputs, dayError, errorMsg.validDate);
-    console.log(errorMsg.validDate);
-  } else {
-    setSuccess(allInputs, bday);
-    console.log("data válida");
+  if (check.day && check.year && check.month) {
+    if (!isExists(year, month - 1, day)) {
+      setSuccess("allInputs");
+      setError("allInputs", dayP, errorMsg.validDate);
+    } else if (isAfter(bday, today)) {
+      setSuccess("allInputs");
+      setError("allInputs", dayP, errorMsg.past);
+    } else {
+      setSuccess("allInputs");
+      ageCalc(bday);
+    }
   }
 }
 
 function setError(input, p, message) {
-  const allInputs = getInputs();
-  if (input == allInputs) {
-    for (const i in allInputs) {
-      for (const c of i.children) {
-        c.classList.add("error");
+  let div = input.parentElement;
+  if (input === "allInputs") {
+    for (const c of dateForm.children) {
+      for (const j of c.children) {
+        j.classList.add("error");
       }
     }
-  }
-  const div = input.parentElement;
-  for (const c of div.children) {
-    c.classList.add("error");
+  } else {
+    for (const c of div.children) {
+      c.classList.add("error");
+    }
   }
   p.innerText = message;
 }
 
-function setSuccess(input, bday) {
-  const div = input.parentElement;
-  for (const c of div.children) {
-    c.classList.remove("error");
-  }
-  ageCalc(bday);
-}
+function setSuccess(input) {
+  const { dayP, monthP, yearP } = getP();
+  let div = input.parentElement;
 
-function bDay(year, month, day) {
-  return new Date(`${year}-${month}-${day}`);
+  if (input === "allInputs") {
+    debugger;
+    dayP.innerText = "";
+    monthP.innerText = "";
+    yearP.innerText = "";
+    for (const c of dateForm.children) {
+      for (const j of c.children) {
+        j.classList.remove("error");
+      }
+    }
+  } else {
+    for (const c of div.children) {
+      c.classList.remove("error");
+    }
+  }
 }
 
 function ageCalc(bday) {
@@ -145,16 +178,8 @@ const getDisplays = () => {
   };
 };
 function displayCalc(yearsCalc, monthsCalc, daysCalc) {
-  if (
-    Number.isNaN(yearsCalc) ||
-    Number.isNaN(monthsCalc) ||
-    Number.isNaN(daysCalc)
-  )
-    return;
-  else {
-    const { dayDisplay, monthDisplay, yearDisplay } = getDisplays();
-    dayDisplay.innerText = daysCalc;
-    monthDisplay.innerText = monthsCalc;
-    yearDisplay.innerText = yearsCalc;
-  }
+  const { dayDisplay, monthDisplay, yearDisplay } = getDisplays();
+  dayDisplay.innerText = daysCalc;
+  monthDisplay.innerText = monthsCalc;
+  yearDisplay.innerText = yearsCalc;
 }
