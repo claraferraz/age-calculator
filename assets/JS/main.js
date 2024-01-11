@@ -1,11 +1,4 @@
-import {
-  isExists,
-  isAfter,
-  format,
-  formatDistance,
-  formatRelative,
-  subDays,
-} from "../../node_modules/date-fns";
+import { isExists, isAfter } from "date-fns";
 
 const getInputs = () => {
   const dayInput = document.querySelector("#day-input");
